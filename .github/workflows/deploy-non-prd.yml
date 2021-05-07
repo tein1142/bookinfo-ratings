@@ -1,6 +1,6 @@
 name: deploy-non-prd
 on:
-  push: 
+  push:
     branches:
       - dev
       - master
@@ -8,8 +8,6 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
       - name: Set env
         run: echo "ENV_NAME=$( [ "$GITHUB_REF" == "refs/heads/master" ] && echo 'uat' || echo ${GITHUB_REF##*/} )" >> $GITHUB_ENV
       - name: Login to GitHub Container Registry
@@ -22,15 +20,15 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ghcr.io/tein1142/bookinfo_ratings:${{ env.ENV_NAME }}
+          tags: ghcr.io/tein1142/bookinfo-ratings:${{ env.ENV_NAME }}
   deploy:
     needs: build
     runs-on: ubuntu-20.04
     steps:
+      - name: Set env
+        run: echo "ENV_NAME=$( [ "$GITHUB_REF" == "refs/heads/master" ] && echo 'uat' || echo ${GITHUB_REF##*/} )" >> $GITHUB_ENV
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Set env
-        run: echo "ENV_NAME=$( [ $GITHUB_REF == "refs/heads/master" ] && echo 'uat' || echo ${GITHUB_REF##*/} )" >> $GITHUB_ENV
       - name: get-credentials
         uses: google-github-actions/get-gke-credentials@main
         with:
@@ -51,11 +49,11 @@ jobs:
                 "COMMIT_SHA": "${{ github.sha }}"
               }
             }
-  acceptance_test:
+  acceptance-test:
     needs: deploy
     runs-on: ubuntu-20.04
     steps:
       - name: Set env
-        run: echo "ENV_NAME=$( [ $GITHUB_REF == "refs/heads/master" ] && echo 'uat' || echo ${GITHUB_REF##*/} )" >> $GITHUB_ENV
-      - name: acceptance test
-        run: curl http://bookinfo.${{ env.ENV_NAME }}.opsta.net/student66/ratings/health | grep "Ratings is working" && echo $?
+        run: echo "ENV_NAME=$( [ "$GITHUB_REF" == "refs/heads/master" ] && echo 'uat' || echo ${GITHUB_REF##*/} )" >> $GITHUB_ENV
+      - name: Acceptance Test
+        run: curl http://bookinfo.${{ env.ENV_NAME }}.opsta.net/student66/ratings/health | grep "Ratings is working"
