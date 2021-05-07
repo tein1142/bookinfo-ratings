@@ -1,6 +1,6 @@
 name: deploy-non-prd
 on:
-  push:
+  push: 
     branches:
       - dev
       - master
